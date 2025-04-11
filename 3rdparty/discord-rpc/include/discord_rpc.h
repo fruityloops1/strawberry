@@ -1,52 +1,44 @@
 #pragma once
 #include <stdint.h>
 
-// clang-format off
-
-// clang-format on
-
 namespace discord_rpc {
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+struct RichPresence {
+    int type = 0;
+    const char* name = nullptr;   /* max 128 bytes */
+    const char* state = nullptr;   /* max 128 bytes */
+    const char* details = nullptr; /* max 128 bytes */
+    int64_t startTimestamp = 0;
+    int64_t endTimestamp = 0;
+    const char* largeImageKey = nullptr;  /* max 32 bytes */
+    const char* largeImageText = nullptr; /* max 128 bytes */
+    const char* smallImageKey = nullptr;  /* max 32 bytes */
+    const char* smallImageText = nullptr; /* max 128 bytes */
+    const char* partyId = nullptr;        /* max 128 bytes */
+    int partySize = 0;
+    int partyMax = 0;
+    int partyPrivacy = 0;
+    const char* matchSecret = nullptr;    /* max 128 bytes */
+    const char* joinSecret = nullptr;     /* max 128 bytes */
+    const char* spectateSecret = nullptr; /* max 128 bytes */
+    int8_t instance = 0;
+};
 
-typedef struct DiscordRichPresence {
-    int type;
-    const char* name;   /* max 128 bytes */
-    const char* state;   /* max 128 bytes */
-    const char* details; /* max 128 bytes */
-    int64_t startTimestamp;
-    int64_t endTimestamp;
-    const char* largeImageKey;  /* max 32 bytes */
-    const char* largeImageText; /* max 128 bytes */
-    const char* smallImageKey;  /* max 32 bytes */
-    const char* smallImageText; /* max 128 bytes */
-    const char* partyId;        /* max 128 bytes */
-    int partySize;
-    int partyMax;
-    int partyPrivacy;
-    const char* matchSecret;    /* max 128 bytes */
-    const char* joinSecret;     /* max 128 bytes */
-    const char* spectateSecret; /* max 128 bytes */
-    int8_t instance;
-} DiscordRichPresence;
-
-typedef struct DiscordUser {
+struct DiscordUser {
     const char* userId;
     const char* username;
     const char* discriminator;
     const char* avatar;
-} DiscordUser;
+};
 
-typedef struct DiscordEventHandlers {
+struct DiscordEventHandlers {
     void (*ready)(const DiscordUser* request);
     void (*disconnected)(int errorCode, const char* message);
     void (*errored)(int errorCode, const char* message);
     void (*joinGame)(const char* joinSecret);
     void (*spectateGame)(const char* spectateSecret);
     void (*joinRequest)(const DiscordUser* request);
-} DiscordEventHandlers;
+};
 
 #define DISCORD_REPLY_NO 0
 #define DISCORD_REPLY_YES 1
@@ -54,24 +46,21 @@ typedef struct DiscordEventHandlers {
 #define DISCORD_PARTY_PRIVATE 0
 #define DISCORD_PARTY_PUBLIC 1
 
-void Discord_Initialize(const char* applicationId,
+void Initialize(const char* applicationId,
                                        DiscordEventHandlers* handlers,
                                        int autoRegister,
                                        const char* optionalSteamId);
-void Discord_Shutdown(void);
+void Shutdown(void);
 
 /* checks for incoming messages, dispatches callbacks */
-void Discord_RunCallbacks(void);
+void RunCallbacks(void);
 
-void Discord_UpdatePresence(const DiscordRichPresence* presence);
-void Discord_ClearPresence(void);
+void UpdateRichPresence(const RichPresence* presence);
+void ClearRichPresence(void);
 
-void Discord_Respond(const char* userid, /* DISCORD_REPLY_ */ int reply);
+void Respond(const char* userid, /* DISCORD_REPLY_ */ int reply);
 
-void Discord_UpdateHandlers(DiscordEventHandlers* handlers);
+void UpdateHandlers(DiscordEventHandlers* handlers);
 
-#ifdef __cplusplus
-} /* extern "C" */
 }  // namespace discord_rpc
 
-#endif

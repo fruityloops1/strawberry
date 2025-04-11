@@ -79,7 +79,7 @@ size_t JsonWriteRichPresenceObj(char *dest,
                                 size_t maxLen,
                                 int nonce,
                                 int pid,
-                                const DiscordRichPresence *presence) {
+                                const RichPresence *presence) {
   JsonWriter writer(dest, maxLen);
 
   {
@@ -163,6 +163,8 @@ size_t JsonWriteRichPresenceObj(char *dest,
       }
     }
   }
+
+  printf("hi %s\n", dest);
 
   return writer.Size();
 }

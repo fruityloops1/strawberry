@@ -249,7 +249,7 @@ static bool DeregisterForEvent(const char *evtName) {
   return false;
 }
 
-extern "C" void Discord_Initialize(const char *applicationId,
+void Initialize(const char *applicationId,
                                    DiscordEventHandlers *handlers,
                                    int autoRegister,
                                    const char *optionalSteamId) {
@@ -288,7 +288,7 @@ extern "C" void Discord_Initialize(const char *applicationId,
 
   Connection = RpcConnection::Create(applicationId);
   Connection->onConnect = [](JsonDocument &readyMessage) {
-    Discord_UpdateHandlers(&QueuedHandlers);
+    UpdateHandlers(&QueuedHandlers);
     if (QueuedPresence.length > 0) {
       UpdatePresence.exchange(true);
       SignalIOActivity();
@@ -325,7 +325,7 @@ extern "C" void Discord_Initialize(const char *applicationId,
   IoThread->Start();
 }
 
-extern "C" void Discord_Shutdown(void) {
+void Shutdown(void) {
   if (!Connection) {
     return;
   }
@@ -343,7 +343,7 @@ extern "C" void Discord_Shutdown(void) {
   RpcConnection::Destroy(Connection);
 }
 
-extern "C" void Discord_UpdatePresence(const DiscordRichPresence *presence) {
+void UpdateRichPresence(const RichPresence *presence) {
   {
     std::lock_guard<std::mutex> guard(PresenceMutex);
     QueuedPresence.length = JsonWriteRichPresenceObj(
@@ -353,11 +353,11 @@ extern "C" void Discord_UpdatePresence(const DiscordRichPresence *presence) {
   SignalIOActivity();
 }
 
-extern "C" void Discord_ClearPresence(void) {
-  Discord_UpdatePresence(nullptr);
+ void ClearRichPresence(void) {
+  UpdateRichPresence(nullptr);
 }
 
-extern "C" void Discord_Respond(const char *userId, /* DISCORD_REPLY_ */ int reply) {
+void Respond(const char *userId, /* DISCORD_REPLY_ */ int reply) {
   // if we are not connected, let's not batch up stale messages for later
   if (!Connection || !Connection->IsOpen()) {
     return;
@@ -371,7 +371,7 @@ extern "C" void Discord_Respond(const char *userId, /* DISCORD_REPLY_ */ int rep
   }
 }
 
-extern "C" void Discord_RunCallbacks(void) {
+void RunCallbacks(void) {
   // Note on some weirdness: internally we might connect, get other signals, disconnect any number
   // of times inbetween calls here. Externally, we want the sequence to seem sane, so any other
   // signals are book-ended by calls to ready and disconnect.
@@ -449,7 +449,7 @@ extern "C" void Discord_RunCallbacks(void) {
   }
 }
 
-extern "C" void Discord_UpdateHandlers(DiscordEventHandlers *newHandlers) {
+void UpdateHandlers(DiscordEventHandlers *newHandlers) {
   if (newHandlers) {
 #define HANDLE_EVENT_REGISTRATION(handler_name, event)            \
   if (!Handlers.handler_name && newHandlers->handler_name) {      \

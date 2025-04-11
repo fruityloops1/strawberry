@@ -24,12 +24,12 @@ inline size_t StringCopy(char (&dest)[Len], const char *src) {
 size_t JsonWriteHandshakeObj(char *dest, size_t maxLen, int version, const char *applicationId);
 
 // Commands
-struct DiscordRichPresence;
+struct RichPresence;
 size_t JsonWriteRichPresenceObj(char *dest,
                                 size_t maxLen,
                                 int nonce,
                                 int pid,
-                                const DiscordRichPresence *presence);
+                                const RichPresence *presence);
 size_t JsonWriteSubscribeCommand(char *dest, size_t maxLen, int nonce, const char *evtName);
 
 size_t JsonWriteUnsubscribeCommand(char *dest, size_t maxLen, int nonce, const char *evtName);
