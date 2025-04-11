@@ -36,10 +36,7 @@ namespace {
 constexpr char kDiscordApplicationId[] = "1352351827206733974";
 constexpr char kStrawberryIconResourceName[] = "embedded_cover";
 constexpr char kStrawberryIconDescription[] = "Strawberry Music Player";
-constexpr qint64 kDiscordPresenceUpdateRateLimitMs = 2000;
 }  // namespace
-
-using namespace discord_rpc;
 
 namespace discord {
 
@@ -49,10 +46,9 @@ RichPresence::RichPresence(const SharedPtr<Player> player,
     : QObject(parent),
       player_(player),
       playlist_manager_(playlist_manager),
-      send_presence_timestamp_(0),
       enabled_(false) {
 
-  Discord_Initialize(kDiscordApplicationId, nullptr, 1, nullptr);
+  discord_rpc::Initialize(kDiscordApplicationId, nullptr, 1, nullptr);
 
   QObject::connect(&*player_->engine(), &EngineBase::StateChanged, this, &RichPresence::EngineStateChanged);
   QObject::connect(&*playlist_manager_, &PlaylistManager::CurrentSongChanged, this, &RichPresence::CurrentSongChanged);
@@ -63,7 +59,7 @@ RichPresence::RichPresence(const SharedPtr<Player> player,
 }
 
 RichPresence::~RichPresence() {
-  Discord_Shutdown();
+  discord_rpc::Shutdown();
 }
 
 void RichPresence::ReloadSettings() {
@@ -74,7 +70,7 @@ void RichPresence::ReloadSettings() {
   s.endGroup();
 
   if (enabled_ && !enabled) {
-    Discord_ClearPresence();
+    discord_rpc::ClearRichPresence();
   }
 
   enabled_ = enabled;
@@ -88,7 +84,7 @@ void RichPresence::EngineStateChanged(const EngineBase::State state) {
     SendPresenceUpdate();
   }
   else {
-    Discord_ClearPresence();
+    discord_rpc::ClearRichPresence();
   }
 
 }
@@ -111,30 +107,24 @@ void RichPresence::SendPresenceUpdate() {
     return;
   }
 
-  const qint64 current_timestamp = QDateTime::currentMSecsSinceEpoch();
-  if (current_timestamp - send_presence_timestamp_ < kDiscordPresenceUpdateRateLimitMs) {
-    qLog(Info) << "Not sending rich presence due to rate limit of" << kDiscordPresenceUpdateRateLimitMs << "ms";
-    return;
-  }
-
-  send_presence_timestamp_ = current_timestamp;
-
-  ::DiscordRichPresence presence_data{};
-  memset(&presence_data, 0, sizeof(presence_data));
+  discord_rpc::RichPresence presence_data{};
   presence_data.type = 2; // Listening
   presence_data.largeImageKey = kStrawberryIconResourceName;
   presence_data.smallImageKey = kStrawberryIconResourceName;
   presence_data.smallImageText = kStrawberryIconDescription;
   presence_data.instance = 0;
 
+  QByteArray artist;
+  QByteArray album;
+
   if (!activity_.artist.isEmpty()) {
-    QByteArray artist = activity_.artist.toUtf8();
+    artist = activity_.artist.toUtf8();
     artist.prepend(tr("by ").toUtf8());
     presence_data.state = artist.constData();
   }
 
   if (!activity_.album.isEmpty() && activity_.album != activity_.title) {
-    QByteArray album = activity_.album.toUtf8();
+    album = activity_.album.toUtf8();
     album.prepend(tr("on ").toUtf8());
     presence_data.largeImageText = album.constData();
   }
@@ -146,8 +136,7 @@ void RichPresence::SendPresenceUpdate() {
   presence_data.startTimestamp = start_timestamp;
   presence_data.endTimestamp = start_timestamp + activity_.length_secs;
 
-  Discord_UpdatePresence(&presence_data);
-
+  UpdateRichPresence(&presence_data);
 }
 
 void RichPresence::SetTimestamp(const qint64 seconds) {
